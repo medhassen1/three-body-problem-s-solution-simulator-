@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three-Body Problem Simulator | Interactive N-Body Physics | TÜBİTAK 2209-A</title>
+    <meta name="description" content="Interactive three-body problem simulator with RK4 and symplectic integrators. Explore Šuvakov-Dmitrašinović periodic orbits, chaos, and gravitational dynamics. Research-grade numerical integration with energy/momentum analysis.">
+    <meta name="keywords" content="three-body problem, n-body simulation, orbital mechanics, chaos theory, numerical integration, RK4, symplectic integrator, Šuvakov-Dmitrašinović orbits">
+    <meta name="author" content="TÜBİTAK 2209-A Research Project">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🌌 Three-Body Problem Simulator</h1>
+            <p class="subtitle">Explore the chaotic dance of celestial bodies under gravity</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Canvas Container -->
+            <div class="canvas-container">
+                <canvas id="simulationCanvas"></canvas>
+                <div class="canvas-overlay">
+                    <div class="info-panel">
+                        <div class="info-item">
+                            <span class="info-label">Time:</span>
+                            <span id="timeDisplay">0.00</span> years
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Energy:</span>
+                            <span id="energyDisplay">0.00</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Energy Drift:</span>
+                            <span id="energyDrift">0.00%</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">FPS:</span>
+                            <span id="fpsDisplay">60</span>
+                        </div>
+                    </div>
+                    <div class="period-badge" id="periodBadge" style="display: none;">
+                        <span class="badge-icon">✓</span>
+                        <span class="badge-text">Periodic (T ≈ <span id="periodValue">0.00</span>)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Panel (Collapsible) -->
+            <div class="analysis-panel" id="analysisPanel">
+                <div class="analysis-header">
+                    <h3>📊 Analysis</h3>
+                    <button id="toggleAnalysis" class="btn-icon" aria-label="Toggle analysis panel">▼</button>
+                </div>
+                <div class="analysis-content" id="analysisContent">
+                    <div class="analysis-section">
+                        <h4>Energy vs Time</h4>
+                        <canvas id="energyChart" width="300" height="120"></canvas>
+                        <div class="chart-stats">
+                            <small>Max drift: <span id="maxDrift">0.00%</span></small>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-section">
+                        <h4>Angular Momentum</h4>
+                        <canvas id="angularMomentumChart" width="300" height="120"></canvas>
+                        <div class="chart-stats">
+                            <small>L = <span id="angularMomentum">0.00</span></small>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-section">
+                        <h4>Pairwise Distances</h4>
+                        <canvas id="distanceChart" width="300" height="120"></canvas>
+                        <div class="chart-legend">
+                            <small><span style="color:#ff6b6b;">━</span> r₁₂  <span style="color:#4ecdc4;">━</span> r₂₃  <span style="color:#ffe66d;">━</span> r₁₃</small>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-section">
+                        <h4>Advanced Analysis</h4>
+                        <div class="advanced-options">
+                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                                <input type="checkbox" id="enablePoincare">
+                                <span style="font-size: 0.85rem;">Poincaré Section (y=0)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="enableLyapunov">
+                                <span style="font-size: 0.85rem;">Lyapunov Exponent</span>
+                            </label>
+                        </div>
+                        <canvas id="poincareChart" width="300" height="120" style="display: none; margin-top: 10px;"></canvas>
+                        <div id="lyapunovDisplay" style="display: none; margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                            <small style="display: block; color: var(--text-secondary);">
+                                λ ≈ <span id="lyapunovValue" style="color: var(--primary-color); font-weight: 600;">calculating...</span>
+                            </small>
+                            <small style="display: block; margin-top: 5px; color: var(--text-muted); font-size: 0.75rem;">
+                                <span id="chaosIndicator"></span>
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-section">
+                        <h4>Export Data</h4>
+                        <div class="button-group">
+                            <button id="exportCSV" class="btn btn-small" aria-label="Export data as CSV">CSV</button>
+                            <button id="exportJSON" class="btn btn-small" aria-label="Export data as JSON">JSON</button>
+                            <button id="shareLink" class="btn btn-small" aria-label="Copy shareable link">🔗 Share</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <!-- Simulation Controls -->
+                <div class="control-section">
+                    <h3>⚙️ Simulation Controls</h3>
+                    <div class="button-group">
+                        <button id="playPauseBtn" class="btn btn-primary" aria-label="Play or pause simulation">▶️ Play</button>
+                        <button id="resetBtn" class="btn btn-secondary" aria-label="Reset simulation to initial state">🔄 Reset</button>
+                        <button id="clearTrailsBtn" class="btn btn-secondary" aria-label="Clear orbital trails">🧹 Clear Trails</button>
+                    </div>
+                    <div class="keyboard-hint">
+                        <small>⌨️ <strong>Space</strong> Play/Pause • <strong>R</strong> Reset • <strong>C</strong> Clear • <strong>+/-</strong> Speed • <strong>G</strong> CoM • <strong>V</strong> Vectors</small>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label for="speedSlider">
+                            Simulation Speed: <span id="speedValue">1.0</span>x
+                        </label>
+                        <input type="range" id="speedSlider" min="0.1" max="5" step="0.1" value="1">
+                    </div>
+
+                    <div class="slider-group">
+                        <label for="trailLengthSlider">
+                            Trail Length: <span id="trailLengthValue">500</span>
+                        </label>
+                        <input type="range" id="trailLengthSlider" min="0" max="2000" step="50" value="500">
+                    </div>
+
+                    <div class="integrator-select">
+                        <label for="integratorSelect">
+                            Integrator Method:
+                        </label>
+                        <select id="integratorSelect" aria-label="Choose numerical integration method">
+                            <option value="rk4">RK4 (Classical)</option>
+                            <option value="verlet">Velocity Verlet (Symplectic)</option>
+                        </select>
+                        <small class="integrator-info">
+                            ℹ️ Symplectic integrators better conserve energy/momentum over long runs
+                        </small>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="showTrailsCheckbox" checked>
+                            Show Trails
+                        </label>
+                        <label>
+                            <input type="checkbox" id="showVelocityCheckbox">
+                            Show Velocity Vectors
+                        </label>
+                        <label>
+                            <input type="checkbox" id="centerOfMassCheckbox" checked>
+                            Follow Center of Mass
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Preset Scenarios -->
+                <div class="control-section">
+                    <h3>🎯 Preset Scenarios</h3>
+                    <p class="preset-subtitle">Šuvakov-Dmitrašinović Solutions (2013)</p>
+                    <div class="preset-grid">
+                        <button class="preset-btn" data-preset="figure8">
+                            <div class="preset-icon">∞</div>
+                            <div class="preset-name">Figure-8</div>
+                            <div class="preset-stability stable">✓ Stable</div>
+                        </button>
+                        <button class="preset-btn" data-preset="butterflyI">
+                            <div class="preset-icon">🦋</div>
+                            <div class="preset-name">Butterfly-I</div>
+                            <div class="preset-stability unstable">✗ Unstable</div>
+                        </button>
+                        <button class="preset-btn" data-preset="butterflyII">
+                            <div class="preset-icon">🦋</div>
+                            <div class="preset-name">Butterfly-II</div>
+                            <div class="preset-stability stable">✓ Stable</div>
+                        </button>
+                        <button class="preset-btn" data-preset="bumblebee">
+                            <div class="preset-icon">🐝</div>
+                            <div class="preset-name">Bumblebee</div>
+                            <div class="preset-stability stable">✓ Stable</div>
+                        </button>
+                        <button class="preset-btn" data-preset="dragonfly">
+                            <div class="preset-icon">🦟</div>
+                            <div class="preset-name">Dragonfly</div>
+                            <div class="preset-stability stable">✓ Stable</div>
+                        </button>
+                        <button class="preset-btn" data-preset="goggles">
+                            <div class="preset-icon">🥽</div>
+                            <div class="preset-name">Goggles</div>
+                            <div class="preset-stability unstable">✗ Unstable</div>
+                        </button>
+                        <button class="preset-btn" data-preset="mothI">
+                            <div class="preset-icon">🦋</div>
+                            <div class="preset-name">Moth-I</div>
+                            <div class="preset-stability stable">✓ Stable</div>
+                        </button>
+                        <button class="preset-btn" data-preset="mothII">
+                            <div class="preset-icon">🦋</div>
+                            <div class="preset-name">Moth-II</div>
+                            <div class="preset-stability unstable">⚠ Very Unstable</div>
+                        </button>
+                    </div>
+                    
+                    <p class="preset-subtitle" style="margin-top: 20px;">Classic Solutions</p>
+                    <div class="preset-grid">
+                        <button class="preset-btn" data-preset="lagrange">
+                            <div class="preset-icon">📐</div>
+                            <div class="preset-name">Lagrange</div>
+                            <div class="preset-stability stable">✓ Stable</div>
+                        </button>
+                        <button class="preset-btn" data-preset="binary">
+                            <div class="preset-icon">⚛️</div>
+                            <div class="preset-name">Binary + Planet</div>
+                        </button>
+                        <button class="preset-btn" data-preset="chaotic">
+                            <div class="preset-icon">🌀</div>
+                            <div class="preset-name">Binary + Planet (chaotic)</div>
+                            <div class="preset-stability unstable">✗ Unstable</div>
+                        </button>
+                        <button class="preset-btn" data-preset="random">
+                            <div class="preset-icon">🎲</div>
+                            <div class="preset-name">Random</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Initial Conditions Display -->
+                <div class="control-section">
+                    <h3>📋 Initial Conditions</h3>
+                    <div class="ic-display" id="icDisplay">
+                        <p class="ic-hint">Select a preset to view its initial conditions</p>
+                    </div>
+                </div>
+
+                <!-- Custom Body Editor -->
+                <div class="control-section">
+                    <h3>✏️ Custom Body Editor</h3>
+                    <div class="custom-editor">
+                        <div class="editor-toggle">
+                            <button id="toggleEditorBtn" class="btn btn-primary">
+                                🎨 Enable Custom Mode
+                            </button>
+                        </div>
+                        
+                        <div id="customEditorPanel" class="editor-panel" style="display: none;">
+                            <p class="editor-hint">Configure each body's properties manually:</p>
+                            
+                            <!-- Body 1 -->
+                            <div class="body-editor">
+                                <div class="editor-header">
+                                    <div class="body-color" style="background: #ff6b6b;"></div>
+                                    <span class="editor-title">Body 1</span>
+                                </div>
+                                <div class="editor-inputs">
+                                    <div class="input-group">
+                                        <label>Mass</label>
+                                        <input type="number" id="mass1" value="1.0" step="0.1" min="0.1">
+                                    </div>
+                                    <div class="input-row">
+                                        <div class="input-group">
+                                            <label>Position X</label>
+                                            <input type="number" id="x1" value="0.97" step="0.01">
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Position Y</label>
+                                            <input type="number" id="y1" value="-0.24" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="input-row">
+                                        <div class="input-group">
+                                            <label>Velocity X</label>
+                                            <input type="number" id="vx1" value="0.47" step="0.01">
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Velocity Y</label>
+                                            <input type="number" id="vy1" value="0.43" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Body 2 -->
+                            <div class="body-editor">
+                                <div class="editor-header">
+                                    <div class="body-color" style="background: #4ecdc4;"></div>
+                                    <span class="editor-title">Body 2</span>
+                                </div>
+                                <div class="editor-inputs">
+                                    <div class="input-group">
+                                        <label>Mass</label>
+                                        <input type="number" id="mass2" value="1.0" step="0.1" min="0.1">
+                                    </div>
+                                    <div class="input-row">
+                                        <div class="input-group">
+                                            <label>Position X</label>
+                                            <input type="number" id="x2" value="-0.97" step="0.01">
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Position Y</label>
+                                            <input type="number" id="y2" value="0.24" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="input-row">
+                                        <div class="input-group">
+                                            <label>Velocity X</label>
+                                            <input type="number" id="vx2" value="0.47" step="0.01">
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Velocity Y</label>
+                                            <input type="number" id="vy2" value="0.43" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Body 3 -->
+                            <div class="body-editor">
+                                <div class="editor-header">
+                                    <div class="body-color" style="background: #ffe66d;"></div>
+                                    <span class="editor-title">Body 3</span>
+                                </div>
+                                <div class="editor-inputs">
+                                    <div class="input-group">
+                                        <label>Mass</label>
+                                        <input type="number" id="mass3" value="1.0" step="0.1" min="0.1">
+                                    </div>
+                                    <div class="input-row">
+                                        <div class="input-group">
+                                            <label>Position X</label>
+                                            <input type="number" id="x3" value="0" step="0.01">
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Position Y</label>
+                                            <input type="number" id="y3" value="0" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="input-row">
+                                        <div class="input-group">
+                                            <label>Velocity X</label>
+                                            <input type="number" id="vx3" value="-0.93" step="0.01">
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Velocity Y</label>
+                                            <input type="number" id="vy3" value="-0.86" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="editor-actions">
+                                <button id="applyCustomBtn" class="btn btn-primary">
+                                    Apply Configuration
+                                </button>
+                                <button id="clickPlaceBtn" class="btn btn-secondary">
+                                    Click to Place Bodies
+                                </button>
+                            </div>
+
+                            <div class="editor-hint">
+                                <small>💡 Tip: Click "Click to Place Bodies" then click on the canvas to set positions visually!</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Body Configuration -->
+                <div class="control-section">
+                    <h3>🪐 Current Configuration</h3>
+                    <div class="config-table-container">
+                        <table class="config-table" id="configTable">
+                            <thead>
+                                <tr>
+                                    <th>Body</th>
+                                    <th>Mass</th>
+                                    <th>Position (x, y)</th>
+                                    <th>Velocity (vx, vy)</th>
+                                    <th>KE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="configTableBody" style="display: none;">
+                                <!-- Will populate when simulation starts -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Information -->
+                <div class="control-section">
+                    <h3>ℹ️ About</h3>
+                    <div class="info-text">
+                        <p>The <strong>Three-Body Problem</strong> is a classical physics problem that demonstrates chaotic behavior. It's generally unsolvable analytically, but we can simulate it numerically using symplectic and Runge-Kutta integrators.</p>
+                        
+                        <p><strong>Units & Normalization:</strong></p>
+                        <ul>
+                            <li>Gravitational constant: <strong>G = 1</strong></li>
+                            <li>Masses: dimensionless (normalized)</li>
+                            <li>Time: arbitrary units (≈ orbital periods)</li>
+                            <li>Distance: arbitrary units (AU-like)</li>
+                        </ul>
+                        
+                        <p><strong>References:</strong></p>
+                        <ul>
+                            <li>Šuvakov, M. & Dmitrašinović, V. (2013). "Three Classes of Newtonian Three-Body Planar Periodic Orbits." <em>Physical Review Letters</em> 110, 114301. <a href="https://doi.org/10.1103/PhysRevLett.110.114301" target="_blank" rel="noopener">doi:10.1103/PhysRevLett.110.114301</a></li>
+                        </ul>
+                        
+                        <p><strong>How to cite this tool:</strong></p>
+                        <p style="font-size: 0.85em; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px;">
+                            Three-Body Problem Simulator (2025). TÜBİTAK 2209-A Research Project. 
+                            <a href="https://tubitak2209a.netlify.app" target="_blank">https://tubitak2209a.netlify.app</a>
+                        </p>
+                        
+                        <p><strong>Color Legend:</strong></p>
+                        <div class="color-legend">
+                            <div class="legend-item">
+                                <span class="color-box" style="background: #ff6b6b;"></span>
+                                Body 1
+                            </div>
+                            <div class="legend-item">
+                                <span class="color-box" style="background: #4ecdc4;"></span>
+                                Body 2
+                            </div>
+                            <div class="legend-item">
+                                <span class="color-box" style="background: #ffe66d;"></span>
+                                Body 3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Made with ❤️ for physics enthusiasts | Using RK4 numerical integration</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

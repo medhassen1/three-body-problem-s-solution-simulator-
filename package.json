@@ -1,0 +1,32 @@
+{
+  "name": "three-body-problem-simulator",
+  "version": "1.0.0",
+  "description": "An interactive web-based simulator for exploring the Three-Body Problem in physics",
+  "main": "index.html",
+  "scripts": {
+    "start": "start index.html",
+    "serve": "python -m http.server 8000"
+  },
+  "keywords": [
+    "physics",
+    "simulation",
+    "three-body-problem",
+    "orbital-mechanics",
+    "chaos-theory",
+    "numerical-integration",
+    "rk4",
+    "visualization",
+    "canvas",
+    "education"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/three-body-simulator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/three-body-simulator/issues"
+  },
+  "homepage": "https://github.com/yourusername/three-body-simulator#readme"
+}
