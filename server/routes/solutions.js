@@ -1,4 +1,5 @@
 const express = require('express');
+const authMiddleware = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // ---------------------------------------------------------------------------
@@ -157,34 +158,34 @@ router.get('/:id', (req, res) => {
 
 // ---------------------------------------------------------------------------
 // POST /api/solutions
-// Create a new solution — requires auth (Phase 2)
+// Create a new solution — auth wired up, DB query coming in Phase 3
 // ---------------------------------------------------------------------------
-router.post('/', (req, res) => {
-  res.status(501).json({ error: 'Not yet implemented — coming in Phase 3 (requires auth from Phase 2)' });
+router.post('/', authMiddleware, (req, res) => {
+  res.status(501).json({ error: 'Saving solutions coming in Phase 3' });
 });
 
 // ---------------------------------------------------------------------------
 // PUT /api/solutions/:id
-// Update a solution — requires auth + ownership (Phase 3)
+// Update a solution — auth + ownership check coming in Phase 3
 // ---------------------------------------------------------------------------
-router.put('/:id', (req, res) => {
-  res.status(501).json({ error: 'Not yet implemented — coming in Phase 3' });
+router.put('/:id', authMiddleware, (req, res) => {
+  res.status(501).json({ error: 'Updating solutions coming in Phase 3' });
 });
 
 // ---------------------------------------------------------------------------
 // DELETE /api/solutions/:id
-// Delete a solution — requires auth + ownership (Phase 3)
+// Delete a solution — auth + ownership check coming in Phase 3
 // ---------------------------------------------------------------------------
-router.delete('/:id', (req, res) => {
-  res.status(501).json({ error: 'Not yet implemented — coming in Phase 3' });
+router.delete('/:id', authMiddleware, (req, res) => {
+  res.status(501).json({ error: 'Deleting solutions coming in Phase 3' });
 });
 
 // ---------------------------------------------------------------------------
 // POST /api/solutions/:id/like
-// Toggle like on a solution — requires auth (Phase 3)
+// Toggle like — auth wired up, DB query coming in Phase 3
 // ---------------------------------------------------------------------------
-router.post('/:id/like', (req, res) => {
-  res.status(501).json({ error: 'Not yet implemented — coming in Phase 3' });
+router.post('/:id/like', authMiddleware, (req, res) => {
+  res.status(501).json({ error: 'Likes coming in Phase 3' });
 });
 
 module.exports = router;
