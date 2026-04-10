@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  username     String     @unique
+  passwordHash String     @map("password_hash")
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  solutions Solution[]
+  likes     Like[]
+
+  @@map("users")
+}
+
+model Solution {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id")
+  name        String
+  description String?
+  isPublic    Boolean  @default(true) @map("is_public")
+
+  // Body 1
+  b1X    Float @map("b1_x")
+  b1Y    Float @map("b1_y")
+  b1Vx   Float @map("b1_vx")
+  b1Vy   Float @map("b1_vy")
+  b1Mass Float @map("b1_mass")
+
+  // Body 2
+  b2X    Float @map("b2_x")
+  b2Y    Float @map("b2_y")
+  b2Vx   Float @map("b2_vx")
+  b2Vy   Float @map("b2_vy")
+  b2Mass Float @map("b2_mass")
+
+  // Body 3
+  b3X    Float @map("b3_x")
+  b3Y    Float @map("b3_y")
+  b3Vx   Float @map("b3_vx")
+  b3Vy   Float @map("b3_vy")
+  b3Mass Float @map("b3_mass")
+
+  integrator String   @default("rk4")
+  timestep   Float    @default(0.001)
+  tags       String[]
+  likesCount Int      @default(0) @map("likes_count")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  likes Like[]
+
+  @@map("solutions")
+}
+
+model Like {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  solutionId String   @map("solution_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  solution Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, solutionId])
+  @@map("likes")
+}
